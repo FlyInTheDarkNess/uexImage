@@ -90,6 +90,11 @@
 //    }
     //MWPhotoBrowser *photoBrowser = (MWPhotoBrowser*)[Utils getSuperControllerWith:ges.view];
 //    UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",_imageUrl]]]];
+    
+    if ([_imageUrl isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *imageDic = (NSDictionary *)_imageUrl;
+        _imageUrl = imageDic[@"src"];
+    }
     NSData *imageData=[[NSData alloc] initWithContentsOfFile:_imageUrl];
     //将二进制数据转成图片
     UIImage *image=[[UIImage alloc] initWithData:imageData];
