@@ -13,8 +13,8 @@
 
 
 typedef NS_ENUM(NSInteger,uexImageCropShape){
-    uexImageCropShapeSquare     = 0,
-    uexImageCropShapeCircle     = 1,
+    uexImageCropShapeSquare     = 1,
+    uexImageCropShapeCircle     = 2,
     uexImageCropShapeRect4x3    = 3,
     uexImageCropShapeRect16x9   = 4
 };
