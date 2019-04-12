@@ -17,6 +17,7 @@
 @property (nonatomic,strong)NSMutableArray<MWPhoto *> * photos;
 @property (nonatomic,strong)NSArray<NSString *> * photosUrl;
 @property (nonatomic,strong)NSMutableDictionary<NSString *,MWPhoto *> * thumbs;
+@property (nonatomic,strong)NSMutableArray * selectedArray;
 @property (nonatomic,strong) NSString *imageUrl;
 
 @end
@@ -32,6 +33,7 @@
         self.photos = [NSMutableArray array];
         self.thumbs = [NSMutableDictionary dictionary];
         self.photosUrl = [NSMutableArray array];
+        self.selectedArray = [NSMutableArray array];
     }
     return self;
 }
@@ -62,6 +64,7 @@
     self.dataDict=nil;
     [self.photos removeAllObjects];
     [self.thumbs removeAllObjects];
+    [self.selectedArray removeAllObjects];
     self.cb = nil;
 }
 
@@ -152,6 +155,8 @@
     
     if([self.dataDict objectForKey:@"data"] && [[self.dataDict objectForKey:@"data"] isKindOfClass:[NSArray class]]){
         [self parsePhoto:[self.dataDict objectForKey:@"data"]];
+        [self.selectedArray removeAllObjects];
+        [self.selectedArray addObjectsFromArray:[self.dataDict objectForKey:@"data"]];
     }
     if([self.dataDict objectForKey:@"displayActionButton"]){
         browser.displayActionButton = [[self.dataDict objectForKey:@"displayActionButton"] boolValue];
@@ -164,6 +169,10 @@
     }
     if([self.dataDict objectForKey:@"startOnGrid"]){
         browser.startOnGrid = [[self.dataDict objectForKey:@"startOnGrid"] boolValue];
+    }
+    if([self.dataDict objectForKey:@"judgeDelete"]){
+        browser.displaySelectionButtons = YES;
+        browser.alwaysShowControls = YES;
     }
 
     self.photoBrowser = browser;
@@ -270,6 +279,51 @@
 
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser actionButtonPressedForPhotoAtIndex:(NSUInteger)index{
     NSLog(@"点击");
+}
+
+- (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index{
+    //浏览图片时是图片是否选中状态
+    if([self.dataDict objectForKey:@"data"] && [[self.dataDict objectForKey:@"data"] isKindOfClass:[NSArray class]]){
+        NSArray *photos =[self.dataDict objectForKey:@"data"];
+        id photo = photos[index];
+        for (id Tphoto in self.selectedArray) {
+            if ([Tphoto isEqual:photo]) {
+                return YES;
+            }
+        }
+    }
+    return NO;
+}
+
+- (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected{
+    
+    //selected表示是否选中
+    if (selected) {
+        if([self.dataDict objectForKey:@"data"] && [[self.dataDict objectForKey:@"data"] isKindOfClass:[NSArray class]]){
+            NSArray *photos =[self.dataDict objectForKey:@"data"];
+            id photo = photos[index];
+            [self.selectedArray addObject:photo];
+        }
+        NSLog(@"第%ld张图片在被选中",index);
+    }else{
+        if([self.dataDict objectForKey:@"data"] && [[self.dataDict objectForKey:@"data"] isKindOfClass:[NSArray class]]){
+            NSArray *photos =[self.dataDict objectForKey:@"data"];
+            id photo = photos[index];
+            [self.selectedArray removeObject:photo];
+        }
+        NSLog(@"第%ld张图片在被取消",index);
+    }
+    NSMutableArray *imageArr = [NSMutableArray array];
+    for (id image in self.selectedArray) {
+        if ([image isKindOfClass:[NSDictionary class]]) {
+            NSDictionary *imageDic = image;
+            NSString *imageUrl = imageDic[@"src"];
+            [imageArr addObject:imageUrl];
+        }else if([image isKindOfClass:[NSString class]]){
+            [imageArr addObject:image];
+        }
+    }
+    [self.EUExImage.webViewEngine callbackWithFunctionKeyPath:@"uexImage.cbDelete" arguments:ACArgsPack(imageArr.ac_JSONFragment)];
 }
 
 
